@@ -823,3 +823,127 @@ terraform apply
 
 ==============================================================================
 
+PART 4 — Linux scripting & hardening
+4.1 Bash script: check_disk_usage
+
+scripts/check_disk_usage.sh
+
+#!/usr/bin/env bash
+THRESHOLD=${1:-80}
+echo "Checking disks; threshold ${THRESHOLD}%"
+df -hP --exclude-type=tmpfs --exclude-type=devtmpfs | tail -n +2 | while read -r filesystem size used avail usep mount; do
+  p=$(echo "$usep" | tr -d '%')
+  if [ "$p" -ge "$THRESHOLD" ]; then
+    echo "ALERT: $mount is ${usep} used"
+  fi
+done
+
+
+Make executable:
+
+chmod +x scripts/check_disk_usage.sh
+./scripts/check_disk_usage.sh 75
+
+4.2 Troubleshooting scenario (web service not starting)
+
+sudo systemctl status myservice
+
+sudo journalctl -u myservice -n 200 --no-pager
+
+Check config / permissions: ls -l /etc/myservice ; sudo chmod if needed
+
+Test binary: run which and run manually with --debug flags
+
+Look at port conflicts: ss -tuln | grep :80
+
+Fix config, then sudo systemctl restart myservice and re-check logs.
+
+4.3 SSH hardening (edit /etc/ssh/sshd_config)
+
+Set:
+
+PermitRootLogin no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+
+
+Then:
+
+sudo systemctl restart sshd
+
+4.4 Firewall (ufw example on Ubuntu)
+sudo yum install ufw -y
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp from <YOUR_IP>/32
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status verbose
+
+==========================================================================================================================================================
+.github/workflows/ci.yml
+name: CI/CD Node App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: amzonlinux-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 3. Hadolint (Dockerfile lint)
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v2
+        with:
+          dockerfile: ./app/Dockerfile
+
+      # 4. Build Docker image
+      - name: Build Docker image
+        run: docker build -t node-app:latest .
+
+      # 5. Trivy scan
+      - name: Trivy Security Scan
+        uses: aquasecurity/trivy-action@v2
+        with:
+          image-ref: naveenladdu123/node-app:latest
+
+      # 6. Login to DockerHub
+      - name: DockerHub Login
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+
+      # 7. Push image to DockerHub
+      - name: Push Docker image
+        run: docker push naveenladdu123/node-app:latest
+
+      # Optional: Terraform deploy (example placeholder)
+      #- name: Terraform Deploy
+      #  run: |
+      #    cd terraform
+      #    terraform init -upgrade
+      #    terraform plan -out=tfplan
+      #    terraform apply -auto-approve tfplan
+      #  env:
+      #    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #    AWS_DEFAULT_REGION: eu-west-1
+
+      ======================================================================================================================================================================================
+      
+
+
