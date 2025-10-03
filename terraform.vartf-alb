@@ -1,0 +1,4 @@
+name           = "my-ecs-demo"
+vpc_id         = "vpc-0044de06c0da8a416"         
+public_subnets = ["subnet-09cc924f5ac633a2a", "subnet-0a9933648cdf88b00"]  
+alb_sg_id      = "sg-0b1297784280f495a"          
