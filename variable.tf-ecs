@@ -1,0 +1,92 @@
+# Base name for all ECS resources
+variable "name" {
+  description = "Base name prefix for ECS resources"
+  type        = string
+}
+
+# CPU units for ECS task
+variable "cpu" {
+  description = "CPU units for ECS task"
+  type        = string
+}
+
+# Memory for ECS task
+variable "memory" {
+  description = "Memory for ECS task"
+  type        = string
+}
+
+# IAM role ARN for ECS task execution
+variable "execution_role_arn" {
+  description = "IAM role ARN for ECS task execution"
+  type        = string
+}
+
+# IAM role ARN for ECS task
+variable "task_role_arn" {
+  description = "IAM role ARN for ECS task"
+  type        = string
+}
+
+# Container details
+variable "container_name" {
+  description = "Container name"
+  type        = string
+}
+
+variable "container_image" {
+  description = "Container image (ECR URI or Docker Hub image)"
+  type        = string
+}
+
+variable "container_port" {
+  description = "Container port"
+  type        = number
+}
+
+# Number of tasks
+variable "desired_count" {
+  description = "Number of tasks to run"
+  type        = number
+  default     = 1
+}
+
+# AWS region
+variable "aws_region" {
+  description = "AWS Region"
+  type        = string
+}
+
+# Secrets for ECS container (from SSM/Secrets Manager)
+variable "secrets" {
+  description = "List of secrets for container"
+  type = list(object({
+    name       = string
+    value_from = string
+  }))
+  default = []
+}
+
+# Networking
+variable "private_subnets" {
+  description = "Private subnets for ECS tasks"
+  type        = list(string)
+}
+
+variable "ecs_sg_id" {
+  description = "ECS service security group ID"
+  type        = string
+}
+
+# Load balancer target group
+variable "target_group_arn" {
+  description = "Target group ARN for ECS service"
+  type        = string
+}
+
+# Derive commonly used names from base `name`
+locals {
+  cluster_name = "${var.name}-cluster"
+  service_name = "${var.name}-service"
+  family       = "${var.name}-family"
+}
