@@ -1,0 +1,13 @@
+name               = "my-ecs-demo"
+container_name     = "node-app"
+container_image    = "naveenladdu123/node-app:latest"
+container_port     = 3000
+cpu                = "256"
+memory             = "512"
+execution_role_arn = "arn:aws:iam::351889159534:role/ecsTaskExecutionRole"
+task_role_arn      = "arn:aws:iam::351889159534:role/ecsTaskRole"
+private_subnets    = ["subnet-0ea54719ae4a04d97","subnet-00be3f1a7ae2021bb"]
+ecs_sg_id          = "sg-0b1297784280f495a"
+target_group_arn   = "arn:aws:elasticloadbalancing:eu-west-1:351889159534:targetgroup/my-ecs-demo-tg-ip/12c6f88b75ce6318"
+desired_count      = 2
+aws_region         = "eu-west-1"
