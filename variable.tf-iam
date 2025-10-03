@@ -1,0 +1,4 @@
+variable "name" {
+  description = "Base name for all ECS resources"
+  type        = string
+}
