@@ -1,0 +1,51 @@
+# Application Load Balancer
+resource "aws_lb" "alb" {
+  name                     = "${var.name}-alb"
+  internal                 = false
+  load_balancer_type       = "application"
+  subnets                  = var.public_subnets       # Public subnets for ALB
+  security_groups          = [var.alb_sg_id]         # ALB security group
+  idle_timeout             = 60
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "${var.name}-alb"
+  }
+}
+
+# Target Group for ECS Fargate
+resource "aws_lb_target_group" "tg" {
+  name = "${var.name}-tg-ip"
+  target_type = "ip"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  ip_address_type = "ipv4"        # Explicitly set IP type
+
+  health_check {
+    path                = "/health"      # Ensure your container responds here
+    protocol            = "HTTP"
+    matcher             = "200-399"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = "${var.name}-tg"
+  }
+
+}
+
+# ALB Listener
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tg.arn
+  }
+}
